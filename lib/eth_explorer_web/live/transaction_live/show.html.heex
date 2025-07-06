@@ -1,0 +1,155 @@
+<div class="container mx-auto px-4 py-8">
+  <nav class="mb-6">
+    <div class="text-sm breadcrumbs">
+      <ul>
+        <li><%= live_redirect "Blocks", to: ~p"/blocks" %></li>
+        <%= if @transaction do %>
+          <li><%= live_redirect "Block ##{@transaction.block_number}", to: ~p"/blocks/#{@transaction.block_number}" %></li>
+        <% end %>
+        <li>Transaction</li>
+      </ul>
+    </div>
+  </nav>
+
+  <h1 class="text-3xl font-bold mb-8">Transaction Details</h1>
+  
+  <%= if @error do %>
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+      <p><%= @error %></p>
+      <p class="mt-2">
+        This transaction may still be pending or it doesn't exist. Please check that you have the correct transaction hash.
+      </p>
+    </div>
+  <% end %>
+  
+  <%= if @transaction do %>
+  <div class="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+    <div class="px-6 py-4">
+      <div class="mb-4">
+        <h2 class="text-sm text-gray-500">Transaction Hash</h2>
+        <p class="text-sm font-mono break-all"><%= @transaction.hash %></p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">Block</h2>
+            <p class="text-sm">
+              <%= live_redirect "##{@transaction.block_number}", to: ~p"/blocks/#{@transaction.block_number}", class: "text-blue-600 hover:underline" %>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">From</h2>
+            <p class="text-sm font-mono break-all">
+              <%= live_redirect @transaction.from, to: ~p"/address/#{@transaction.from}", class: "text-blue-600 hover:underline" %>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">To</h2>
+            <p class="text-sm font-mono break-all">
+              <%= if @transaction.to do %>
+                <%= live_redirect @transaction.to, to: ~p"/address/#{@transaction.to}", class: "text-blue-600 hover:underline" %>
+              <% else %>
+                Contract Creation
+                <%= if @transaction.contract_address do %>
+                  (<%= live_redirect @transaction.contract_address, to: ~p"/address/#{@transaction.contract_address}", class: "text-blue-600 hover:underline" %>)
+                <% end %>
+              <% end %>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">Value</h2>
+            <p class="text-sm"><%= wei_to_eth(@transaction.value) %> ETH</p>
+          </div>
+        </div>
+        
+        <div>
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">Status</h2>
+            <p class="text-sm">
+              <%= if @transaction.status == 1 do %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  Success
+                </span>
+              <% else %>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                  Failed
+                </span>
+              <% end %>
+            </p>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">Gas Used</h2>
+            <p class="text-sm"><%= @transaction.gas_used %></p>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">Gas Price</h2>
+            <p class="text-sm"><%= @transaction.gas_price %> Wei</p>
+          </div>
+          
+          <div class="mb-4">
+            <h2 class="text-sm text-gray-500">Nonce</h2>
+            <p class="text-sm"><%= @transaction.nonce %></p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4">
+        <h2 class="text-sm text-gray-500">Input Data</h2>
+        <div class="mt-1 bg-gray-100 p-3 rounded-md">
+          <pre class="text-xs font-mono break-all"><%= @transaction.input %></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%= if length(@transaction.logs) > 0 do %>
+    <h2 class="text-2xl font-bold mb-4">Event Logs</h2>
+    
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="px-6 py-4">
+        <%= for log <- @transaction.logs do %>
+          <div class="mb-4 pb-4 border-b border-gray-200 last:border-0">
+            <div class="flex items-center mb-2">
+              <span class="text-sm text-gray-500 mr-2">Address:</span>
+              <span class="text-sm font-mono">
+                <%= live_redirect log.address, to: ~p"/address/#{log.address}", class: "text-blue-600 hover:underline" %>
+              </span>
+            </div>
+            
+            <div class="mb-2">
+              <span class="text-sm text-gray-500">Topics:</span>
+              <ul class="mt-1 space-y-1">
+                <%= if log.topic0 do %>
+                  <li class="text-xs font-mono break-all">0: <%= log.topic0 %></li>
+                <% end %>
+                <%= if log.topic1 do %>
+                  <li class="text-xs font-mono break-all">1: <%= log.topic1 %></li>
+                <% end %>
+                <%= if log.topic2 do %>
+                  <li class="text-xs font-mono break-all">2: <%= log.topic2 %></li>
+                <% end %>
+                <%= if log.topic3 do %>
+                  <li class="text-xs font-mono break-all">3: <%= log.topic3 %></li>
+                <% end %>
+              </ul>
+            </div>
+            
+            <div class="mb-2">
+              <span class="text-sm text-gray-500">Data:</span>
+              <div class="mt-1 bg-gray-100 p-2 rounded-md">
+                <pre class="text-xs font-mono break-all"><%= log.data %></pre>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  <% end %>
+</div>

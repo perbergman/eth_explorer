@@ -1,0 +1,177 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-12">
+    <h1 class="text-4xl font-bold mb-2">Ethereum Blockchain Explorer</h1>
+    <p class="text-lg text-gray-600">Explore blocks, transactions, and addresses on the Ethereum blockchain</p>
+  </div>
+  
+  <div class="mb-12">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="px-6 py-4">
+        <h2 class="text-2xl font-bold mb-4">Search</h2>
+        
+        <%= if @search_error do %>
+          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p><%= @search_error %></p>
+          </div>
+        <% end %>
+        
+        <form phx-submit="search">
+          <div class="flex">
+            <input type="text" name="search[query]" placeholder="Search by Block Number, Transaction Hash, or Address" class="flex-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-l-md" />
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-r-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mb-8">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="px-6 py-4">
+        <h2 class="text-xl font-bold mb-4">Network Status</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-50 p-4 rounded-md">
+            <h3 class="text-sm text-gray-500 mb-1">Latest Block</h3>
+            <p class="text-xl font-semibold">
+              <%= if @network_status.connected do %>
+                <%= @network_status.latest_block || "N/A" %>
+              <% else %>
+                <span class="text-red-500">Not Connected</span>
+              <% end %>
+            </p>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-md">
+            <h3 class="text-sm text-gray-500 mb-1">Gas Price</h3>
+            <p class="text-xl font-semibold">
+              <%= if @network_status.connected do %>
+                <%= format_gas_price(@network_status.gas_price) %>
+              <% else %>
+                <span class="text-red-500">Not Connected</span>
+              <% end %>
+            </p>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-md">
+            <h3 class="text-sm text-gray-500 mb-1">Network Status</h3>
+            <p class="text-xl font-semibold">
+              <%= if @network_status.connected do %>
+                <span class="text-green-500">Connected</span>
+              <% else %>
+                <span class="text-red-500">Not Connected</span>
+              <% end %>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div>
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold">Latest Blocks</h2>
+            <%= live_redirect to: ~p"/blocks", class: "text-blue-600 hover:text-blue-800 text-sm" do %>
+              View All Blocks
+            <% end %>
+          </div>
+        </div>
+        
+        <div class="divide-y divide-gray-200">
+          <%= for block <- @latest_blocks do %>
+            <div class="px-6 py-4">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-lg mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m-8-4l8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-blue-600">
+                        <%= live_redirect to: ~p"/blocks/#{block.number}" do %>
+                          Block #<%= block.number %>
+                        <% end %>
+                      </div>
+                      <div class="text-sm text-gray-500">
+                        <%= format_timestamp(block.timestamp) %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm text-gray-500">
+                    Miner: <%= format_hash(block.miner) %>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <%= block.transaction_count %> txns
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+          
+          <%= if length(@latest_blocks) == 0 do %>
+            <div class="px-6 py-4 text-gray-500 text-center">
+              No blocks found
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <div>
+      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-bold">Latest Transactions</h2>
+        </div>
+        
+        <div class="divide-y divide-gray-200">
+          <%= for tx <- @latest_transactions do %>
+            <div class="px-6 py-4">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-lg mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-blue-600">
+                        <%= live_redirect to: ~p"/tx/#{tx.hash}" do %>
+                          <%= format_hash(tx.hash) %>
+                        <% end %>
+                      </div>
+                      <div class="text-sm text-gray-500">
+                        Block <%= live_redirect "##{tx.block_number}", to: ~p"/blocks/#{tx.block_number}", class: "text-blue-600 hover:underline" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm text-gray-500">
+                    From: <%= format_hash(tx.from) %>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    To: <%= if tx.to, do: format_hash(tx.to), else: "[Contract Creation]" %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+          
+          <%= if length(@latest_transactions) == 0 do %>
+            <div class="px-6 py-4 text-gray-500 text-center">
+              No transactions found
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
